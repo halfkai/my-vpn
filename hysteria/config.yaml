@@ -1,0 +1,15 @@
+listen: :2443
+
+tls:
+  cert: /etc/letsencrypt/live/<this_should_be_replaced_by_root_domain>/fullchain.pem
+  key: /etc/letsencrypt/live/<this_should_be_replaced_by_root_domain>/privkey.pem
+
+auth:
+  type: password
+  password: <this_should_be_replaced_by_hysteria_password>
+
+masquerade:
+  type: proxy
+  proxy:
+    url: https://news.ycombinator.com/
+    rewriteHost: true
