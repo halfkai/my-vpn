@@ -1,7 +1,7 @@
 {
   "log": {
-    "access": "/usr/local/var/log/xray/access.log",
-    "error": "/usr/local/var/log/xray/error.log",
+    "access": "/opt/homebrew/var/log/xray/access.log",
+    "error": "/opt/homebrew/var/log/xray/error.log",
     "loglevel": "error"
   },
   "dns": {
@@ -107,6 +107,10 @@
           "serverName": "<this_should_be_replaced_by_root_domain>",
           "publicKey": "<this_should_be_replaced_by_reality_pub_key>",
           "path": "<this_should_be_replaced_by_xhttp_path>"
+        },
+        "tlsSettings": {
+          "serverName": "<this_should_be_replaced_by_root_domain>",
+          "alpn": ["h3"]
         }
       }
     },
