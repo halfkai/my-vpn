@@ -11,8 +11,8 @@
 ```shell
 output=$(xray x25519)
 
-export vless_uuid=xray uuid
-export xhttp_path=xray uuid
+export vless_uuid=`xray uuid`
+export xhttp_path=`xray uuid`
 export reality_domain=reality.your.domain
 export root_domain=your.domain
 export website_domain=web.your.domain

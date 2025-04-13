@@ -15,7 +15,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s/<${credential_prefix}reality_domain>/$reality_domain/g" "$PWD/nginx/nginx.conf"
     sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/nginx/nginx.conf"
     sed -i '' "s/<${credential_prefix}website_domain>/$website_domain/g" "$PWD/nginx/conf.d/blog.conf"
-    sed -i '' "s/<${credential_prefix}reality>/$reality/g" "$PWD/nginx/conf.d/free.conf"
+    sed -i '' "s/<${credential_prefix}reality_domain>/$reality_domain/g" "$PWD/nginx/conf.d/free.conf"
     sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/start.sh"
     sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/hysteria/config.yaml"
     sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/xray/config.json"
