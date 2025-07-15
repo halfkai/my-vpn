@@ -17,6 +17,12 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s/$root_domain/<${credential_prefix}root_domain>/g" "$PWD/start.sh"
     sed -i '' "s/$root_domain/<${credential_prefix}root_domain>/g" "$PWD/hysteria/config.yaml"
     sed -i '' "s/$root_domain/<${credential_prefix}root_domain>/g" "$PWD/xray/config.json"
+    sed -i '' "s|$warp_secret_key|<${credential_prefix}warp_secret_key>|g" "$PWD/xray/config.json"
+    sed -i '' "s|$warp_public_key|<${credential_prefix}warp_public_key>|g" "$PWD/xray/config.json"
+    sed -i '' "s|$warp_private_key|<${credential_prefix}warp_private_key>|g" "$PWD/xray/config.json"
+
+    sed -i '' "s|$warp_public_key|<${credential_prefix}warp_public_key>|g" "$PWD/xray/client-config.json"
+    sed -i '' "s|$warp_private_key|<${credential_prefix}warp_private_key>|g" "$PWD/xray/client-config.json"
 
     sed -i '' "s/$root_domain/<${credential_prefix}root_domain>/g" "$PWD/xray/client-config.json"
     sed -i '' "s/$vless_uuid/<${credential_prefix}vless_uuid>/g" "$PWD/xray/client-config.json"

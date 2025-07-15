@@ -36,6 +36,16 @@
       {
         "type": "field",
         "domain": [
+          "domain:www.instagram.com",
+          "domain:instagram.com",
+          "domain:iplocation.com",
+          "domain:iplocation.net"
+        ],
+        "outboundTag": "wireguard"
+      },
+      {
+        "type": "field",
+        "domain": [
           "geosite:category-ads-all"
         ],
         "outboundTag": "block"
@@ -81,6 +91,24 @@
     }
   ],
   "outbounds": [
+    {
+      "tag": "wireguard",
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "<this_should_be_replaced_by_warp_private_key>",
+        "peers": [
+          {
+            "publicKey": "<this_should_be_replaced_by_warp_public_key>",
+            "endpoint": "engage.cloudflareclient.com:2408"
+          }
+        ]
+      },
+      "streamSettings":{
+        "sockopt":{
+            "dialerProxy":"proxy"
+        }
+      }
+    },
     {
       "tag": "proxy",
       "protocol": "vless",

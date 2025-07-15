@@ -15,6 +15,16 @@
         "rules": [
             {
                 "type": "field",
+                "domain": [
+                    "domain:www.instagram.com",
+                    "domain:instagram.com",
+                    "domain:iplocation.com",
+                    "domain:iplocation.net"
+                ],
+                "outboundTag": "wireguard"
+            },
+            {
+                "type": "field",
                 "protocol": [
                     "bittorrent"
                 ],
@@ -125,6 +135,21 @@
         {
             "tag": "block",
             "protocol": "blackhole"
+        },
+        {
+            "tag": "wireguard",
+            "protocol": "wireguard",
+            "settings": {
+                "secretKey": "<this_should_be_replaced_by_warp_secret_key>",
+                "address": ["172.16.0.2/32", "2606:4700:110:8ecc:1986:3ea3:2d92:ff4d/128"],
+                "peers": [
+                    {
+                        "publicKey": "<this_should_be_replaced_by_warp_public_key>",
+                        "endpoint": "engage.cloudflareclient.com:2408"
+                    }
+                ]
+            }
         }
     ]
 }
+
