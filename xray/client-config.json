@@ -8,31 +8,72 @@
     "servers": [
       {
         "address": "1.1.1.1",
-        "domains": [
-          "geosite:geolocation-!cn"
-        ]
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      {
+        "address": "2606:4700:4700::1111",
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      {
+        "address": "8.8.8.8",
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      {
+        "address": "2001:4860:4860::8888",
+        "domains": ["geosite:geolocation-!cn"]
       },
       {
         "address": "223.5.5.5",
-        "domains": [
-          "geosite:cn"
-        ],
-        "expectIPs": [
-          "geoip:cn"
-        ]
+        "domains": ["geosite:cn"],
+        "expectIPs": ["geoip:cn"]
+      },
+      {
+        "address": "2400:3200::1",
+        "domains": ["geosite:cn"],
+        "expectIPs": ["geoip:cn"]
       },
       {
         "address": "114.114.114.114",
-        "domains": [
-          "geosite:cn"
-        ]
+        "domains": ["geosite:cn"]
       },
       "localhost"
-    ]
+    ],
+    "queryStrategy": "UseIP"
   },
   "routing": {
     "domainStrategy": "IPIfNonMatch",
     "rules": [
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:private"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "geosite:cn",
+          "geosite:private",
+          "geosite:apple-cn",
+          "geosite:google-cn",
+          "geosite:tld-cn",
+          "geosite:category-games@cn"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:cn",
+          "<this_should_be_replaced_by_my_server_ipv4>",
+          "<this_should_be_replaced_by_my_server_ipv6>"
+        ],
+        "outboundTag": "direct"
+      },
       {
         "type": "field",
         "domain": [
@@ -45,30 +86,7 @@
       },
       {
         "type": "field",
-        "domain": [
-          "geosite:category-ads-all"
-        ],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geoip:cn",
-          "geoip:private",
-          "geosite:cn",
-          "geosite:private",
-          "geosite:apple-cn",
-          "geosite:google-cn",
-          "geosite:tld-cn",
-          "geosite:category-games@cn"
-        ],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geosite:geolocation-!cn"
-        ],
+        "domain": ["geosite:geolocation-!cn"],
         "outboundTag": "proxy"
       }
     ]
@@ -103,9 +121,9 @@
           }
         ]
       },
-      "streamSettings":{
-        "sockopt":{
-            "dialerProxy":"proxy"
+      "streamSettings": {
+        "sockopt": {
+          "dialerProxy": "proxy"
         }
       }
     },
@@ -134,7 +152,8 @@
           "fingerprint": "chrome",
           "serverName": "<this_should_be_replaced_by_root_domain>",
           "publicKey": "<this_should_be_replaced_by_reality_pub_key>",
-          "path": "<this_should_be_replaced_by_xhttp_path>"
+          "path": "<this_should_be_replaced_by_xhttp_path>",
+          "shortId": "e4c59e0a8bc6f50e"
         },
         "tlsSettings": {
           "serverName": "<this_should_be_replaced_by_root_domain>",

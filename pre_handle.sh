@@ -1,54 +1,138 @@
 #!/bin/bash
 
+set -euo pipefail
+
+# 检查 credentials 文件是否存在
+if [[ ! -f "./.local.credentials" ]]; then
+    echo "Error: .local.credentials file not found!" >&2
+    exit 1
+fi
+
 source ./.local.credentials
 
 credential_prefix=this_should_be_replaced_by_
 
+# 检测操作系统并设置 sed 参数
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "s/<${credential_prefix}cloudflare_token>/$cloudflare_token/g" "$PWD/letsencrypt/dns_tokens.ini"
-    # sed -i '' "s/<${credential_prefix}digitalocean_token>/$digitalocean_token/g" "$PWD/letsencrypt/dns_tokens.ini"
-
-    sed -i '' "s/<${credential_prefix}vless_uuid>/$vless_uuid/g" "$PWD/xray/config.json"
-    sed -i '' "s/<${credential_prefix}reality_pri_key>/$reality_pri_key/g" "$PWD/xray/config.json"
-    sed -i '' "s/<${credential_prefix}xhttp_path>/$xhttp_path/g" "$PWD/xray/config.json"
-    sed -i '' "s/<${credential_prefix}xhttp_path>/$xhttp_path/g" "$PWD/nginx/nginx.conf"
-    sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/nginx/nginx.conf"
-    sed -i '' "s/<${credential_prefix}website_domain>/$website_domain/g" "$PWD/nginx/conf.d/blog.conf"
-    sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/start.sh"
-    sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/hysteria/config.yaml"
-    sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/xray/config.json"
-    sed -i '' "s|<${credential_prefix}warp_secret_key>|$warp_secret_key|g" "$PWD/xray/config.json"
-    sed -i '' "s|<${credential_prefix}warp_public_key>|$warp_public_key|g" "$PWD/xray/config.json"
-    sed -i '' "s|<${credential_prefix}warp_private_key>|$warp_private_key|g" "$PWD/xray/config.json"
-
-    sed -i '' "s|<${credential_prefix}warp_public_key>|$warp_public_key|g" "$PWD/xray/client-config.json"
-    sed -i '' "s|<${credential_prefix}warp_private_key>|$warp_private_key|g" "$PWD/xray/client-config.json"
-
-    sed -i '' "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/xray/client-config.json"
-    sed -i '' "s/<${credential_prefix}vless_uuid>/$vless_uuid/g" "$PWD/xray/client-config.json"
-    sed -i '' "s/<${credential_prefix}reality_pub_key>/$reality_pub_key/g" "$PWD/xray/client-config.json"
-    sed -i '' "s/<${credential_prefix}xhttp_path>/$xhttp_path/g" "$PWD/xray/client-config.json"
-
-    sed -i '' "s/<${credential_prefix}hysteria_password>/$hysteria_password/g" "$PWD/hysteria/config.yaml"
+    SED_INPLACE=(-i '')
 else
-    sed -i -e "s/<${credential_prefix}cloudflare_token>/$cloudflare_token/g" "$PWD/letsencrypt/dns_tokens.ini"
-    #sed -i -e "s/<${credential_prefix}digitalocean_token>/$digitalocean_token/g" "$PWD/letsencrypt/dns_tokens.ini"
-
-    sed -i -e "s/<${credential_prefix}vless_uuid>/$vless_uuid/g" "$PWD/xray/config.json"
-    sed -i -e "s/<${credential_prefix}reality_pri_key>/$reality_pri_key/g" "$PWD/xray/config.json"
-    sed -i -e "s/<${credential_prefix}xhttp_path>/$xhttp_path/g" "$PWD/xray/config.json"
-    sed -i -e "s/<${credential_prefix}xhttp_path>/$xhttp_path/g" "$PWD/nginx/nginx.conf"
-    sed -i -e "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/nginx/nginx.conf"
-    sed -i -e "s/<${credential_prefix}website_domain>/$website_domain/g" "$PWD/nginx/conf.d/blog.conf"
-    sed -i -e "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/start.sh"
-    sed -i -e "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/hysteria/config.yaml"
-    sed -i -e "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/xray/config.json"
-
-    sed -i -e "s/<${credential_prefix}root_domain>/$root_domain/g" "$PWD/xray/client-config.json"
-    sed -i -e "s/<${credential_prefix}vless_uuid>/$vless_uuid/g" "$PWD/xray/client-config.json"
-    sed -i -e "s/<${credential_prefix}reality_pub_key>/$reality_pub_key/g" "$PWD/xray/client-config.json"
-    sed -i -e "s/<${credential_prefix}xhttp_path>/$xhttp_path/g" "$PWD/xray/client-config.json"
-
-    sed -i -e "s/<${credential_prefix}hysteria_password>/$hysteria_password/g" "$PWD/hysteria/config.yaml"
+    SED_INPLACE=(-i)
 fi
+
+# 替换函数：检查文件存在后再替换
+replace_in_file() {
+    local file="$1"
+    local pattern="$2"
+    local replacement="$3"
+    
+    if [[ -f "$file" ]]; then
+        sed "${SED_INPLACE[@]}" "s|${pattern}|${replacement}|g" "$file"
+    else
+        echo "Warning: File not found: $file" >&2
+    fi
+}
+
+# 验证必需变量
+required_vars=(
+    "vless_uuid"
+    "reality_pri_key"
+    "reality_pub_key"
+    "xhttp_path"
+    "root_domain"
+    "my_server_ipv4"
+    "my_server_ipv6"
+)
+
+for var in "${required_vars[@]}"; do
+    if [[ -z "${!var:-}" ]]; then
+        echo "Error: Required variable '$var' is not set in .local.credentials" >&2
+        exit 1
+    fi
+done
+
+# 替换 letsencrypt 配置
+replace_in_file "$PWD/letsencrypt/dns_tokens.ini" \
+    "<${credential_prefix}cloudflare_token>" \
+    "${cloudflare_token:-}"
+
+# 替换 xray/config.json
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}vless_uuid>" \
+    "$vless_uuid"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}reality_pri_key>" \
+    "$reality_pri_key"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}xhttp_path>" \
+    "$xhttp_path"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}root_domain>" \
+    "$root_domain"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}warp_secret_key>" \
+    "${warp_secret_key:-}"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}warp_public_key>" \
+    "${warp_public_key:-}"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}warp_private_key>" \
+    "${warp_private_key:-}"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}my_server_ipv4>" \
+    "$my_server_ipv4"
+replace_in_file "$PWD/xray/config.json" \
+    "<${credential_prefix}my_server_ipv6>" \
+    "$my_server_ipv6"
+
+# 替换 xray/client-config.json
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}warp_public_key>" \
+    "${warp_public_key:-}"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}warp_private_key>" \
+    "${warp_private_key:-}"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}root_domain>" \
+    "$root_domain"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}vless_uuid>" \
+    "$vless_uuid"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}reality_pub_key>" \
+    "$reality_pub_key"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}xhttp_path>" \
+    "$xhttp_path"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}my_server_ipv4>" \
+    "$my_server_ipv4"
+replace_in_file "$PWD/xray/client-config.json" \
+    "<${credential_prefix}my_server_ipv6>" \
+    "$my_server_ipv6"
+
+# 替换 nginx 配置
+replace_in_file "$PWD/nginx/nginx.conf" \
+    "<${credential_prefix}xhttp_path>" \
+    "$xhttp_path"
+replace_in_file "$PWD/nginx/nginx.conf" \
+    "<${credential_prefix}root_domain>" \
+    "$root_domain"
+replace_in_file "$PWD/nginx/conf.d/blog.conf" \
+    "<${credential_prefix}website_domain>" \
+    "${website_domain:-}"
+
+# 替换其他文件
+replace_in_file "$PWD/start.sh" \
+    "<${credential_prefix}root_domain>" \
+    "$root_domain"
+replace_in_file "$PWD/hysteria/config.yaml" \
+    "<${credential_prefix}root_domain>" \
+    "$root_domain"
+replace_in_file "$PWD/hysteria/config.yaml" \
+    "<${credential_prefix}hysteria_password>" \
+    "${hysteria_password:-}"
+
+echo "✓ Configuration files updated successfully"
+echo ""
+echo "Note: To revert changes, run: ./reverse_handle.sh"
 

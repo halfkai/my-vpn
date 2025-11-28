@@ -1,155 +1,154 @@
 {
-    "log": {
-        "loglevel": "warning",
-        "access": "/var/log/xray/access.log",
-        "error": "/var/log/xray/error.log"
-    },
-    "dns": {
-        "servers": [
-            "https+local://1.1.1.1/dns-query",
-            "localhost"
-        ]
-    },
-    "routing": {
-        "domainStrategy": "IPIfNonMatch",
-        "rules": [
-            {
-                "type": "field",
-                "domain": [
-                    "domain:www.instagram.com",
-                    "domain:instagram.com",
-                    "domain:iplocation.com",
-                    "domain:iplocation.net"
-                ],
-                "outboundTag": "wireguard"
-            },
-            {
-                "type": "field",
-                "protocol": [
-                    "bittorrent"
-                ],
-                "outboundTag": "block"
-            },
-            {
-                "type": "field",
-                "ip": [
-                    "geoip:private"
-                ],
-                "outboundTag": "block"
-            },
-            {
-                "type": "field",
-                "ip": [
-                    "geoip:cn"
-                ],
-                "outboundTag": "block"
-            },
-            {
-                "type": "field",
-                "domain": [
-                    "geosite:category-ads-all"
-                ],
-                "outboundTag": "block"
-            }
-        ]
-    },
-    "inbounds": [
-        {
-            "listen": "127.0.0.1",
-            "port": "1443",
-            "protocol": "vless",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "<this_should_be_replaced_by_vless_uuid>",
-                        "flow": "xtls-rprx-vision"
-                    }
-                ],
-                "decryption": "none",
-                "fallbacks": [
-                    {
-                        "dest": 2024
-                    }
-                ]
-            },
-            "streamSettings": {
-                "network": "tcp",
-                "security": "reality",
-                "realitySettings": {
-                    "target": 8443,
-                    "xver": 1,
-                    "serverNames": [
-                        "<this_should_be_replaced_by_root_domain>"
-                    ],
-                    "privateKey": "<this_should_be_replaced_by_reality_pri_key>",
-                    "shortIds": [
-                        ""
-                    ]
-                },
-                "rawSettings": {
-                    "acceptProxyProtocol": true
-                }
-            },
-            "sniffing": {
-                "enabled": true,
-                "destOverride": [
-                    "http",
-                    "tls",
-                    "quic"
-                ]
-            }
-        },
-        {
-            "listen": "127.0.0.1",
-            "port": 2024,
-            "protocol": "vless",
-            "settings": {
-                "clients": [
-                    {
-                        "id": "<this_should_be_replaced_by_vless_uuid>"
-                    }
-                ],
-                "decryption": "none"
-            },
-            "streamSettings": {
-                "network": "xhttp",
-                "xhttpSettings": {
-                    "path": "<this_should_be_replaced_by_xhttp_path>"
-                }
-            },
-            "sniffing": {
-                "enabled": true,
-                "destOverride": [
-                    "http",
-                    "tls",
-                    "quic"
-                ]
-            }
-        }
+  "log": {
+    "loglevel": "warning",
+    "access": "/var/log/xray/access.log",
+    "error": "/var/log/xray/error.log"
+  },
+  "dns": {
+    "servers": [
+      {
+        "address": "https+local://1.1.1.1/dns-query",
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      {
+        "address": "https+local://[2606:4700:4700::1111]/dns-query",
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      {
+        "address": "https+local://8.8.8.8/dns-query",
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      {
+        "address": "https+local://[2001:4860:4860::8888]/dns-query",
+        "domains": ["geosite:geolocation-!cn"]
+      },
+      "localhost"
     ],
-    "outbounds": [
-        {
-            "tag": "direct",
-            "protocol": "freedom"
-        },
-        {
-            "tag": "block",
-            "protocol": "blackhole"
-        },
-        {
-            "tag": "wireguard",
-            "protocol": "wireguard",
-            "settings": {
-                "secretKey": "<this_should_be_replaced_by_warp_secret_key>",
-                "address": ["172.16.0.2/32", "2606:4700:110:8ecc:1986:3ea3:2d92:ff4d/128"],
-                "peers": [
-                    {
-                        "publicKey": "<this_should_be_replaced_by_warp_public_key>",
-                        "endpoint": "engage.cloudflareclient.com:2408"
-                    }
-                ]
-            }
-        }
+    "queryStrategy": "UseIP"
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:private"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": ["geoip:cn"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:www.instagram.com",
+          "domain:instagram.com",
+          "domain:iplocation.com",
+          "domain:iplocation.net"
+        ],
+        "outboundTag": "wireguard"
+      }
     ]
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 1443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "<this_should_be_replaced_by_vless_uuid>",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": 2024
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "8443",
+          "xver": 1,
+          "serverNames": ["<this_should_be_replaced_by_root_domain>"],
+          "privateKey": "<this_should_be_replaced_by_reality_pri_key>",
+          "shortIds": ["e4c59e0a8bc6f50e"]
+        },
+        "rawSettings": {
+          "acceptProxyProtocol": true
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 2024,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "<this_should_be_replaced_by_vless_uuid>"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "path": "<this_should_be_replaced_by_xhttp_path>"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "direct",
+      "protocol": "freedom"
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole"
+    },
+    {
+      "tag": "wireguard",
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "<this_should_be_replaced_by_warp_secret_key>",
+        "address": [
+          "172.16.0.2/32",
+          "2606:4700:110:8ecc:1986:3ea3:2d92:ff4d/128"
+        ],
+        "peers": [
+          {
+            "publicKey": "<this_should_be_replaced_by_warp_public_key>",
+            "endpoint": "engage.cloudflareclient.com:2408"
+          }
+        ]
+      }
+    }
+  ]
 }
-
