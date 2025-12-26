@@ -11,24 +11,11 @@
         "domains": ["geosite:geolocation-!cn"]
       },
       {
-        "address": "2606:4700:4700::1111",
-        "domains": ["geosite:geolocation-!cn"]
-      },
-      {
         "address": "8.8.8.8",
         "domains": ["geosite:geolocation-!cn"]
       },
       {
-        "address": "2001:4860:4860::8888",
-        "domains": ["geosite:geolocation-!cn"]
-      },
-      {
         "address": "223.5.5.5",
-        "domains": ["geosite:cn"],
-        "expectIPs": ["geoip:cn"]
-      },
-      {
-        "address": "2400:3200::1",
         "domains": ["geosite:cn"],
         "expectIPs": ["geoip:cn"]
       },
@@ -38,7 +25,7 @@
       },
       "localhost"
     ],
-    "queryStrategy": "UseIP"
+    "queryStrategy": "UseIPv4"
   },
   "routing": {
     "domainStrategy": "IPIfNonMatch",
@@ -67,11 +54,7 @@
       },
       {
         "type": "field",
-        "ip": [
-          "geoip:cn",
-          "<this_should_be_replaced_by_my_server_ipv4>",
-          "<this_should_be_replaced_by_my_server_ipv6>"
-        ],
+        "ip": ["geoip:cn"],
         "outboundTag": "direct"
       },
       {
@@ -157,7 +140,7 @@
         },
         "tlsSettings": {
           "serverName": "<this_should_be_replaced_by_root_domain>",
-          "alpn": ["h3"]
+          "alpn": ["h3", "h2", "http/1.1"]
         }
       }
     },

@@ -61,12 +61,6 @@ reverse_replace_in_file "$PWD/xray/config.json" \
 reverse_replace_in_file "$PWD/xray/config.json" \
     "${warp_private_key:-}" \
     "${credential_prefix}warp_private_key"
-reverse_replace_in_file "$PWD/xray/config.json" \
-    "${my_server_ipv4:-}" \
-    "${credential_prefix}my_server_ipv4"
-reverse_replace_in_file "$PWD/xray/config.json" \
-    "${my_server_ipv6:-}" \
-    "${credential_prefix}my_server_ipv6"
 
 # 替换 xray/client-config.json
 reverse_replace_in_file "$PWD/xray/client-config.json" \
@@ -87,12 +81,6 @@ reverse_replace_in_file "$PWD/xray/client-config.json" \
 reverse_replace_in_file "$PWD/xray/client-config.json" \
     "${xhttp_path:-}" \
     "${credential_prefix}xhttp_path"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
-    "${my_server_ipv4:-}" \
-    "${credential_prefix}my_server_ipv4"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
-    "${my_server_ipv6:-}" \
-    "${credential_prefix}my_server_ipv6"
 
 # 替换 nginx 配置
 reverse_replace_in_file "$PWD/nginx/nginx.conf" \

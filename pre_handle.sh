@@ -39,8 +39,6 @@ required_vars=(
     "reality_pub_key"
     "xhttp_path"
     "root_domain"
-    "my_server_ipv4"
-    "my_server_ipv6"
 )
 
 for var in "${required_vars[@]}"; do
@@ -77,12 +75,6 @@ replace_in_file "$PWD/xray/config.json" \
 replace_in_file "$PWD/xray/config.json" \
     "<${credential_prefix}warp_private_key>" \
     "${warp_private_key:-}"
-replace_in_file "$PWD/xray/config.json" \
-    "<${credential_prefix}my_server_ipv4>" \
-    "$my_server_ipv4"
-replace_in_file "$PWD/xray/config.json" \
-    "<${credential_prefix}my_server_ipv6>" \
-    "$my_server_ipv6"
 
 # 替换 xray/client-config.json
 replace_in_file "$PWD/xray/client-config.json" \
@@ -103,12 +95,6 @@ replace_in_file "$PWD/xray/client-config.json" \
 replace_in_file "$PWD/xray/client-config.json" \
     "<${credential_prefix}xhttp_path>" \
     "$xhttp_path"
-replace_in_file "$PWD/xray/client-config.json" \
-    "<${credential_prefix}my_server_ipv4>" \
-    "$my_server_ipv4"
-replace_in_file "$PWD/xray/client-config.json" \
-    "<${credential_prefix}my_server_ipv6>" \
-    "$my_server_ipv6"
 
 # 替换 nginx 配置
 replace_in_file "$PWD/nginx/nginx.conf" \
