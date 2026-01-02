@@ -111,13 +111,6 @@ replace_in_file "$PWD/nginx/conf.d/blog.conf" \
 replace_in_file "$PWD/start.sh" \
     "<${credential_prefix}root_domain>" \
     "$root_domain"
-replace_in_file "$PWD/hysteria/config.yaml" \
-    "<${credential_prefix}root_domain>" \
-    "$root_domain"
-replace_in_file "$PWD/hysteria/config.yaml" \
-    "<${credential_prefix}hysteria_password>" \
-    "${hysteria_password:-}"
-
 echo "✓ Configuration files updated successfully"
 echo ""
 echo "Note: To revert changes, run: ./reverse_handle.sh"

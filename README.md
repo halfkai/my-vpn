@@ -1,6 +1,6 @@
 # 🧗 了个 🧱
 
-基于 Xray (VLESS + Reality + XTLS Vision) 和 Hysteria 2 的 VPN 解决方案
+基于 Xray (VLESS + Reality + XTLS Vision) 的 VPN 解决方案
 
 ## 📋 目录
 
@@ -17,11 +17,12 @@
 - [配置管理](#配置管理)
 - [故障排除](#故障排除)
 - [参考资源](#参考资源)
+- [XHTTP over HTTP/3（h3/QUIC）](#xhttp-over-http3h3quic)
 
 ## ✨ 特性
 
 - **VLESS + Reality + XTLS Vision**: 高性能、低延迟的代理协议
-- **Hysteria 2**: 基于 QUIC 的加速协议
+- **路径入口（VLESS over XHTTP）**: 通过 `blog.<root_domain>` + `/<xhttp_path>` 提供可选的“看起来像正常 Web 请求”的入口（由 Nginx 转发到本地 Xray）
 - **智能路由**: 自动分流国内外流量
 - **广告拦截**: 内置广告域名拦截
 - **WireGuard 集成**: 支持 Cloudflare WARP
@@ -38,8 +39,6 @@ my-vpn/
 │   ├── nginx.conf           # Nginx 主配置
 │   └── conf.d/
 │       └── blog.conf        # 网站配置
-├── hysteria/
-│   └── config.yaml          # Hysteria 2 配置
 ├── letsencrypt/
 │   └── dns_tokens.ini       # DNS 验证配置
 ├── pre_handle.sh            # 配置生成脚本
@@ -82,9 +81,8 @@ export vless_uuid=$(xray uuid)
 export xhttp_path=$(xray uuid)
 
 # 设置域名（请替换为你的实际域名）
-export reality_domain=reality.your.domain
 export root_domain=your.domain
-export website_domain=web.your.domain
+export website_domain=web.your.domain  # 可选：仅用于 blog.conf 的 server_name（不影响入口分流）
 
 # 提取密钥
 export reality_pri_key=$(echo "$output" | sed -n 's/Private key: \(.*\)/\1/p')
@@ -98,7 +96,6 @@ export reality_pub_key=$(echo "$output" | sed -n 's/Public key: \(.*\)/\1/p')
 cat > .local.credentials << EOF
 vless_uuid=$vless_uuid
 xhttp_path=$xhttp_path
-reality_domain=$reality_domain
 root_domain=$root_domain
 website_domain=$website_domain
 reality_pri_key=$reality_pri_key
@@ -139,8 +136,7 @@ bash ./start.sh
 2. 申请 Let's Encrypt 证书（使用 DNS 验证）
 3. 配置 Nginx
 4. 安装并配置 Xray
-5. 安装并启动 Hysteria 2
-6. 重启所有服务
+5. 重启所有服务
 
 ## 💻 客户端配置
 
@@ -200,6 +196,14 @@ brew services restart xray
 brew services list
 ```
 
+## XHTTP over HTTP/3（h3/QUIC）
+
+如果你想让代理链路走 HTTP/3（UDP/QUIC），请看：`XHTTP_H3.md`。
+
+> ✅ **已配置**：本仓库已在服务端 `xray/config.json` 中加入对外 `udp/443` 的 XHTTP(h3) 入站（VLESS + XHTTP + TLS，`ALPN=h3`，tag: `vless-xhttp-h3`），客户端模板也包含 `proxy-xhttp-h3` 出站。  
+> ⚠️ **仍需操作**：服务器上放行防火墙/安全组的 `udp/443` 端口（详见 `XHTTP_H3.md`）。  
+> 📝 **默认链路**：主链路（Reality）仍是 **TCP**，客户端路由默认使用 `proxy` 出站；要切换到 QUIC，将路由的 `outboundTag` 改为 `proxy-xhttp-h3`。
+
 ## 🔧 配置管理
 
 ### 恢复配置到模板
@@ -255,9 +259,9 @@ bash ./pre_handle.sh
 2. **检查端口监听**
 
    ```bash
-   netstat -tlnp | grep -E '443|1443|2024'
+   netstat -tlnp | grep -E '443|1443|2024|8443|3001'
    # 或
-   ss -tlnp | grep -E '443|1443|2024'
+   ss -tlnp | grep -E '443|1443|2024|8443|3001'
    ```
 
 3. **检查防火墙**
@@ -290,7 +294,7 @@ bash ./pre_handle.sh
 - [Xray 官方文档](https://xtls.github.io/)
 - [Reality 协议说明](https://github.com/XTLS/REALITY)
 - [v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat) - 路由规则数据库
-- [Nginx SNI 分流配置](https://tabsp.com/posts/nginx-sni-vless-reality-vision-xhttp-hysteria2-web/) - 仅使用 443 端口的完美配置方案
+- [Nginx SNI 分流配置](https://tabsp.com/posts/nginx-sni-vless-reality-vision-xhttp-hysteria2-web/) - SNI 分流思路参考
 
 ## 📝 注意事项
 

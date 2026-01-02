@@ -97,11 +97,4 @@ reverse_replace_in_file "$PWD/nginx/conf.d/blog.conf" \
 reverse_replace_in_file "$PWD/start.sh" \
     "${root_domain:-}" \
     "${credential_prefix}root_domain"
-reverse_replace_in_file "$PWD/hysteria/config.yaml" \
-    "${root_domain:-}" \
-    "${credential_prefix}root_domain"
-reverse_replace_in_file "$PWD/hysteria/config.yaml" \
-    "${hysteria_password:-}" \
-    "${credential_prefix}hysteria_password"
-
 echo "✓ Configuration files reverted to placeholders successfully"

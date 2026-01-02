@@ -15,7 +15,5 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 
 cp ./xray/config.json /usr/local/etc/xray/config.json
 
-bash <(curl -fsSL https://get.hy2.sh/)
-systemctl enable --now hysteria-server.service
 systemctl restart nginx
 systemctl restart xray
