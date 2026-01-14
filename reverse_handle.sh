@@ -53,8 +53,8 @@ reverse_replace_in_file "$PWD/xray/config.json" \
     "${root_domain:-}" \
     "${credential_prefix}root_domain"
 reverse_replace_in_file "$PWD/xray/config.json" \
-    "${warp_secret_key:-}" \
-    "${credential_prefix}warp_secret_key"
+    "${warp_private_key:-}" \
+    "${credential_prefix}warp_private_key"
 reverse_replace_in_file "$PWD/xray/config.json" \
     "${warp_public_key:-}" \
     "${credential_prefix}warp_public_key"

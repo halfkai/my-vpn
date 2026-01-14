@@ -35,58 +35,6 @@
     ],
     "queryStrategy": "UseIP"
   },
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "type": "field",
-        "protocol": ["bittorrent"],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "ip": ["geoip:private", "geoip:cn"],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "domain": ["geosite:category-ads-all"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "domain:api2.cursor.sh",
-          "domain:www.instagram.com",
-          "domain:instagram.com",
-          "domain:iplocation.com",
-          "domain:iplocation.net"
-        ],
-        "outboundTag": "wireguard"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "geosite:cn",
-          "geosite:apple",
-          "geosite:private",
-          "geosite:icloud",
-          "geosite:apple-cn",
-          "geosite:google-cn",
-          "geosite:tld-cn",
-          "geosite:adobe",
-          "geosite:category-games@cn",
-          "domain:*.microsoft.com"
-        ],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "domain": ["geosite:geolocation-!cn"],
-        "outboundTag": "proxy"
-      }
-    ]
-  },
   "inbounds": [
     {
       "tag": "socks-in",
@@ -105,55 +53,6 @@
     }
   ],
   "outbounds": [
-    {
-      "tag": "wireguard",
-      "protocol": "wireguard",
-      "settings": {
-        "secretKey": "<this_should_be_replaced_by_warp_private_key>",
-        "peers": [
-          {
-            "publicKey": "<this_should_be_replaced_by_warp_public_key>",
-            "endpoint": "engage.cloudflareclient.com:2408"
-          }
-        ]
-      },
-      "streamSettings": {
-        "sockopt": {
-          "dialerProxy": "proxy-xhttp-h3"
-        }
-      }
-    },
-    {
-      "tag": "proxy-xhttp-h3",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "<this_should_be_replaced_by_root_domain>",
-            "port": 443,
-            "users": [
-              {
-                "id": "<this_should_be_replaced_by_vless_uuid>",
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "xhttp",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "<this_should_be_replaced_by_root_domain>",
-          "alpn": ["h3"],
-          "fingerprint": "chrome"
-        },
-        "xhttpSettings": {
-          "path": "<this_should_be_replaced_by_xhttp_path>",
-          "mode": "auto"
-        }
-      }
-    },
     {
       "tag": "proxy",
       "protocol": "vless",
@@ -184,7 +83,56 @@
         },
         "tlsSettings": {
           "serverName": "<this_should_be_replaced_by_root_domain>",
-          "alpn": ["h3"]
+          "alpn": ["h3", "h2"]
+        }
+      }
+    },
+    {
+      "tag": "proxy-xhttp",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "<this_should_be_replaced_by_root_domain>",
+            "port": 443,
+            "users": [
+              {
+                "id": "<this_should_be_replaced_by_vless_uuid>",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "<this_should_be_replaced_by_root_domain>",
+          "fingerprint": "chrome",
+          "alpn": ["h3", "h2"]
+        },
+        "xhttpSettings": {
+          "path": "<this_should_be_replaced_by_xhttp_path>",
+          "mode": "auto"
+        }
+      }
+    },
+    {
+      "tag": "wireguard",
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "<this_should_be_replaced_by_warp_private_key>",
+        "peers": [
+          {
+            "publicKey": "<this_should_be_replaced_by_warp_public_key>",
+            "endpoint": "engage.cloudflareclient.com:2408"
+          }
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "dialerProxy": "proxy-reality"
         }
       }
     },
@@ -196,5 +144,54 @@
       "tag": "block",
       "protocol": "blackhole"
     }
-  ]
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "ip": ["geoip:private", "geoip:cn"],
+        "domain": [
+          "domain:<this_should_be_replaced_by_root_domain>",
+          "geosite:cn",
+          "geosite:apple",
+          "geosite:private",
+          "geosite:icloud",
+          "geosite:apple-cn",
+          "geosite:google-cn",
+          "geosite:tld-cn",
+          "geosite:adobe",
+          "geosite:category-games@cn",
+          "domain:*.microsoft.com"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:*.cursor.sh",
+          "domain:*.instagram.com",
+          "domain:*.cdninstagram.com",
+          "domain:iplocation.com",
+          "domain:iplocation.net"
+        ],
+        "outboundTag": "wireguard"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:geolocation-!cn"],
+        "outboundTag": "proxy"
+      }
+    ]
+  }
 }

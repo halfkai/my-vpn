@@ -200,9 +200,142 @@ brew services list
 
 如果你想让代理链路走 HTTP/3（UDP/QUIC），请看：`XHTTP_H3.md`。
 
-> ✅ **已配置**：本仓库已在服务端 `xray/config.json` 中加入对外 `udp/443` 的 XHTTP(h3) 入站（VLESS + XHTTP + TLS，`ALPN=h3`，tag: `vless-xhttp-h3`），客户端模板也包含 `proxy-xhttp-h3` 出站。  
+> ✅ **已配置**：本仓库已在服务端 `xray/config.json` 中加入对外 `udp/443` 的 XHTTP(h3) 入站（VLESS + XHTTP + TLS，`ALPN=h3`，tag: `vless-xhttp-h3`），客户端模板也包含 `proxy-xhttp` 出站。  
 > ⚠️ **仍需操作**：服务器上放行防火墙/安全组的 `udp/443` 端口（详见 `XHTTP_H3.md`）。  
-> 📝 **默认链路**：主链路（Reality）仍是 **TCP**，客户端路由默认使用 `proxy` 出站；要切换到 QUIC，将路由的 `outboundTag` 改为 `proxy-xhttp-h3`。
+> 📝 **默认链路**：主链路（Reality）仍是 **TCP**，客户端路由默认使用 `proxy` 出站；要切换到 QUIC，将路由的 `outboundTag` 改为 `proxy-xhttp`。
+
+## 🔄 流量链路
+
+### 架构概览
+
+```
+互联网 (443/tcp, 443/udp)
+  │
+  ├─ Nginx Stream (443/tcp) - SNI 分流
+  │   │
+  │   ├─ blog.<root_domain> → Nginx HTTPS (127.0.0.1:8443)
+  │   │   ├─ /<xhttp_path> → Xray XHTTP (127.0.0.1:2024)
+  │   │   └─ / → Blog (127.0.0.1:3001)
+  │   │
+  │   └─ 其他 SNI → Xray Reality (127.0.0.1:1443)
+  │
+  └─ Xray XHTTP(h3) (443/udp) - QUIC/HTTP3 入口（直连，不经过 Nginx）
+      └─ VLESS + XHTTP + TLS(ALPN=h3)
+```
+
+### 主要流量路径
+
+#### 1. Reality 代理链路（TCP，默认）
+
+```
+[客户端应用]
+  │
+  └─ SOCKS5/HTTP (127.0.0.1:10800/10801) → Xray Client
+      │
+      ├─ 路由规则匹配
+      │   ├─ 中国 IP/域名 → direct（直连）
+      │   ├─ 广告域名 → block（拦截）
+      │   ├─ Instagram 等 → wireguard（WARP）
+      │   └─ 海外流量 → proxy（代理）
+      │
+      └─ proxy outbound (VLESS + Reality + XTLS Vision)
+          │
+          └─ <root_domain>:443/tcp
+              │
+              └─ Nginx Stream (SNI 分流)
+                  │
+                  └─ 转发到 Xray Reality (127.0.0.1:1443)
+                      │
+                      └─ 处理代理流量 → 目标服务器
+```
+
+**特点：**
+- 使用 Reality 协议伪装成正常 HTTPS 流量
+- XTLS Vision 减少加解密开销
+- Nginx Stream 通过 SNI 分流，使用 Proxy Protocol 传递真实 IP
+
+#### 2. XHTTP 路径入口（TCP，经 Nginx 转发）
+
+```
+[客户端] → <root_domain>:443/tcp
+  │
+  └─ Nginx Stream
+      │
+      └─ SNI: blog.<root_domain> → Nginx HTTPS (127.0.0.1:8443)
+          │
+          └─ location /<xhttp_path>
+              │
+              └─ proxy_pass → Xray XHTTP (127.0.0.1:2024)
+                  │
+                  └─ 处理 VLESS 代理流量
+```
+
+**特点：**
+- 通过 `blog.<root_domain>/<xhttp_path>` 访问
+- 看起来像正常的 Web 请求
+- 需要客户端使用 `proxy-xhttp` 出站（SNI 为 `blog.<root_domain>`）
+
+#### 3. XHTTP(h3) 代理链路（QUIC/HTTP3）
+
+```
+[客户端应用]
+  │
+  └─ proxy-xhttp outbound
+      │
+      └─ VLESS + XHTTP + TLS(ALPN=h3)
+          │
+          └─ <root_domain>:443/udp
+              │
+              └─ Xray XHTTP(h3) Inbound (直连，不经过 Nginx)
+                  │
+                  └─ 处理代理流量 → 目标服务器
+```
+
+**特点：**
+- 使用 QUIC/HTTP3 协议，基于 UDP
+- 不经过 Nginx，直连 Xray
+- 需要放行防火墙/安全组的 `udp/443` 端口
+- 当前 WireGuard（WARP）出站使用此链路作为 `dialerProxy`
+
+#### 4. Web 访问（Blog）
+
+```
+[浏览器] → blog.<root_domain>:443/tcp
+  │
+  └─ Nginx Stream → Nginx HTTPS (127.0.0.1:8443)
+      │
+      └─ location / → Blog (127.0.0.1:3001)
+```
+
+### 端口映射
+
+| 端口 | 服务 | 协议 | 说明 |
+|------|------|------|------|
+| **443** | Nginx Stream | TCP | 入口，SNI 分流 |
+| **443** | Xray XHTTP(h3) | UDP | QUIC/HTTP3 代理入口（直连） |
+| **1443** | Xray Reality | TCP | Reality 协议处理（仅本地） |
+| **2024** | Xray XHTTP | TCP | XHTTP 路径入口（仅本地） |
+| **8443** | Nginx HTTPS | HTTPS | Web 入口（仅本地回环） |
+| **3001** | Nginx Blog | HTTP | 博客服务器（仅本地） |
+| **10800** | Xray SOCKS | SOCKS5 | 客户端本地代理 |
+| **10801** | Xray HTTP | HTTP | 客户端本地代理 |
+
+### 路由规则（客户端）
+
+客户端路由按以下顺序匹配：
+
+1. **BitTorrent** → `direct`（直连）
+2. **私有/中国 IP** → `direct`（直连）
+3. **广告域名** → `block`（拦截）
+4. **特定域名**（如 Instagram、Cursor） → `wireguard`（WARP）
+5. **海外流量** → `proxy`（Reality/TCP）或 `proxy-xhttp`（QUIC）
+
+### DNS 解析
+
+- **中国域名** → 使用国内 DNS（223.5.5.5, 114.114.114.114）
+- **海外域名** → 使用海外 DNS（1.1.1.1, 8.8.8.8，含 IPv6 DoH）
+
+详细流量链路分析请参考：`TRAFFIC_FLOW.md`
 
 ## 🔧 配置管理
 

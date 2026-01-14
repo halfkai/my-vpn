@@ -163,7 +163,7 @@
     │
     ├─ SOCKS5/HTTP → Xray Client (127.0.0.1:10800/10801)
     │   │
-    │   └─ proxy-xhttp-h3 outbound
+    │   └─ proxy-xhttp outbound
     │       │
     │       └─ VLESS + XHTTP + TLS(ALPN=h3)
     │           │
@@ -188,7 +188,7 @@
 
 - 这是独立的 QUIC/HTTP3 入口，**不经过 Nginx**，直连 Xray
 - 使用 TLS 证书（Let's Encrypt），强制 `ALPN: ["h3"]`
-- 与 Reality 入口（TCP）并行，客户端可选择使用 `proxy-xhttp-h3` 出站
+- 与 Reality 入口（TCP）并行，客户端可选择使用 `proxy-xhttp` 出站
 - 需要放行防火墙/安全组的 `udp/443` 端口
 
 ---
@@ -212,10 +212,10 @@
     │   │   └─ geosite:cn, geosite:apple-cn 等
     │   │
     │   ├─ 4. Instagram 等 → wireguard
-    │   │   └─ 通过 WARP 访问（使用 proxy-xhttp-h3 作为 dialerProxy）
+    │   │   └─ 通过 WARP 访问（使用 proxy-xhttp 作为 dialerProxy）
     │   │
     │   └─ 5. geosite:geolocation-!cn → proxy
-    │       └─ 通过 Reality 代理（TCP，默认）或 proxy-xhttp-h3（QUIC，可选）
+    │       └─ 通过 Reality 代理（TCP，默认）或 proxy-xhttp（QUIC，可选）
     │
     └─ 执行路由决策
 ```
@@ -224,7 +224,7 @@
 
 - 中国流量在客户端直连，不经过服务器
 - 智能分流确保性能和隐私
-- WARP 用于特定域名（如 Instagram），且 **WireGuard 出站使用 `proxy-xhttp-h3` 作为 `dialerProxy`**（即 WARP 流量先通过 XHTTP(h3) 代理）
+- WARP 用于特定域名（如 Instagram），且 **WireGuard 出站使用 `proxy-xhttp` 作为 `dialerProxy`**（即 WARP 流量先通过 XHTTP(h3) 代理）
 
 ---
 
@@ -294,40 +294,6 @@
 
 ---
 
-## ⚠️ 潜在问题
-
-### 1. Nginx gRPC Path 配置（用于路径入口）
-
-```nginx
-location /<xhttp_path> {
-    proxy_pass http://127.0.0.1:2024;
-}
-```
-
-**说明**: 当前 Xray 2024 入站使用 `network: "xhttp"`，因此这里应使用 `proxy_pass`（HTTP 反代），而不是 `grpc_pass`。
-
-### 2. Path 入口可用性
-
-- 确保外部访问的 SNI 能命中 `blog.<root_domain>`，否则不会进入 `8443` 的 `location /<xhttp_path>`
-- 确保客户端使用的 XHTTP `path` 与 `<xhttp_path>` 一致
-
-### 3. SNI 分流逻辑
-
-- `blog.<root_domain>` → web_backend
-- 其他 → reality_backend
-- 确保客户端使用正确的 SNI
-
----
-
-## 🔧 建议优化
-
-1. **确认路径入口协议**: nginx 使用 `grpc_pass` 时，Xray 2024 入站应为 `grpc`
-2. **添加监控**: 监控各端口的连接数和流量
-3. **日志分析**: 定期分析访问日志，优化路由规则
-4. **性能测试**: 测试不同场景下的延迟和吞吐量
-
----
-
 ## 📝 总结
 
 当前架构实现了：
@@ -339,10 +305,3 @@ location /<xhttp_path> {
 - ✅ 安全防护（TLS 指纹伪装）
 - ✅ WARP 集成（WireGuard 使用 XHTTP(h3) 作为 dialerProxy）
 - ✅ 灵活扩展（支持 Web 服务）
-
-需要注意：
-
-- ⚠️ 路径入口使用 XHTTP：nginx 需 `proxy_pass`，Xray 2024 入站需 `network: "xhttp"`
-- ⚠️ 确保 SNI 分流逻辑正确
-- ⚠️ **XHTTP(h3) 入口需放行防火墙/安全组的 `udp/443` 端口**
-- ⚠️ 监控服务端资源使用

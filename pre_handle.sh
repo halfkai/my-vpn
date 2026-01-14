@@ -67,8 +67,8 @@ replace_in_file "$PWD/xray/config.json" \
     "<${credential_prefix}root_domain>" \
     "$root_domain"
 replace_in_file "$PWD/xray/config.json" \
-    "<${credential_prefix}warp_secret_key>" \
-    "${warp_secret_key:-}"
+    "<${credential_prefix}warp_private_key>" \
+    "${warp_private_key:-}"
 replace_in_file "$PWD/xray/config.json" \
     "<${credential_prefix}warp_public_key>" \
     "${warp_public_key:-}"
