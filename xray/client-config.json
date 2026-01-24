@@ -82,8 +82,7 @@
           "shortId": "e4c59e0a8bc6f50e"
         },
         "tlsSettings": {
-          "serverName": "<this_should_be_replaced_by_root_domain>",
-          "alpn": ["h3", "h2"]
+          "serverName": "<this_should_be_replaced_by_root_domain>"
         }
       }
     },
@@ -132,7 +131,7 @@
       },
       "streamSettings": {
         "sockopt": {
-          "dialerProxy": "proxy-reality"
+          "dialerProxy": "proxy"
         }
       }
     },
