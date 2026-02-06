@@ -54,12 +54,10 @@ my-vpn/
 ### 事前准备
 
 1. **准备域名和服务器**
-
    - 准备一个域名（例如：`your.domain`）
    - 准备一台海外服务器（推荐使用 VPS）
 
 2. **获取 DNS API Token**
-
    - Cloudflare: 在 [API Tokens](https://dash.cloudflare.com/profile/api-tokens) 创建 Token
    - 或使用其他 DNS 提供商（如 DigitalOcean）
 
@@ -168,11 +166,12 @@ curl -L -o /tmp/geosite.dat \
 1. **编辑客户端配置**
 
    编辑 `xray/client-config.json`，替换以下占位符：
-
-   - `<this_should_be_replaced_by_root_domain>` → 你的服务器域名
+   - `<this_should_be_replaced_by_root_domain>` → 你的服务器域名（用于 Reality 出口等）
    - `<this_should_be_replaced_by_vless_uuid>` → 服务端的 UUID
    - `<this_should_be_replaced_by_reality_pub_key>` → 服务端的 Reality 公钥
    - `<this_should_be_replaced_by_xhttp_path>` → 服务端的 xhttp 路径
+
+   **若使用 XHTTP 出口（如 proxy-cursor，供 WARP 拨号等）**：该出口的 `tlsSettings.serverName` 应设为 **`blog.<root_domain>`**，这样流量才会经 Nginx 8443（Let's Encrypt）反代到 Xray 2024；若设为 `<root_domain>` 会进 1443，Reality 与普通 TLS 不兼容会导致连接失败。
 
 2. **复制配置文件**
 
@@ -198,6 +197,13 @@ brew services list
 
 ## 🔄 流量链路
 
+### 翻墙链路小结
+
+- **一般海外网站**：本机应用 → 系统/应用代理 (10800/10801) → Xray 客户端 → 出站 **proxy-vision** (VLESS + Reality + XTLS Vision) → 公网 443 → Nginx Stream → **1443 (Reality)** → Xray 服务端 → **direct**。**不经过 Let's Encrypt。**
+- **Cursor / OpenAI 等（走 WARP）**：本机应用 → 代理 → Xray 客户端 → 出站 **warp**（其 `dialerProxy` 为 **proxy-cursor**）→ 先建立 **proxy-cursor** (VLESS over XHTTP + TLS) → 公网 443，**SNI 需为 blog.\<root_domain\>** → Nginx Stream → **8443** → Nginx 用 **Let's Encrypt** 终结 TLS → 反代到 **2024 (XHTTP)** → Xray 服务端 → **wireguard (WARP)**。**这条链才用到 Let's Encrypt。**
+
+**重要**：走 XHTTP 的出口（如 proxy-cursor）在客户端里必须把 `serverName` 设为 **`blog.<root_domain>`**，这样 443 才会被 Nginx 分到 8443，否则会进 1443（Reality），协议不匹配会失败。
+
 ### 架构概览
 
 ```
@@ -207,22 +213,22 @@ brew services list
       │
       ├─ SNI: blog.<root_domain>
       │   │
-      │   └─ → Nginx HTTPS (127.0.0.1:8443)
+      │   └─ → Nginx HTTPS (127.0.0.1:8443)  ← Let's Encrypt 证书
       │       ├─ location /<xhttp_path> → Xray XHTTP (127.0.0.1:2024)
       │       └─ location / → Blog (127.0.0.1:3001)
       │
       └─ 其他 SNI (如 <root_domain>)
           │
-          └─ → Xray Reality (127.0.0.1:1443)
+          └─ → Xray Reality (127.0.0.1:1443)  ← 无 LE，Reality 自签
               │
-              ├─ Reality 协议匹配 → 处理代理流量
+              ├─ Reality 协议匹配 → 处理代理流量 → direct / wireguard
               │
               └─ fallback (非 Reality 流量) → Xray XHTTP (127.0.0.1:2024)
 ```
 
 ### 主要流量路径
 
-#### 1. Reality 代理链路（TCP，默认）
+#### 1. Reality 代理链路（proxy-vision，主力）
 
 ```
 [客户端应用]
@@ -232,70 +238,72 @@ brew services list
       ├─ 路由规则匹配
       │   ├─ 中国 IP/域名 → direct（直连）
       │   ├─ 广告域名 → block（拦截）
-      │   ├─ Instagram/Cursor 等 → wireguard（WARP）
-      │   └─ 海外流量 → proxy（代理）
+      │   ├─ Cursor/OpenAI 等 → warp（见下，经 proxy-cursor + WARP）
+      │   └─ 海外流量 → proxy-vision（代理）
       │
-      └─ proxy outbound (VLESS + Reality + XTLS Vision)
+      └─ proxy-vision outbound (VLESS + Reality + XTLS Vision)
           │
           └─ <root_domain>:443/tcp
               │
               └─ Nginx Stream (SNI 分流)
                   │
-                  └─ SNI 不是 blog.<root_domain> → Xray Reality (127.0.0.1:1443)
+                  └─ SNI ≠ blog.<root_domain> → Xray Reality (127.0.0.1:1443)
                       │
-                      ├─ Reality 协议处理
-                      │   │
-                      │   └─ 处理代理流量 → 目标服务器
-                      │
-                      └─ fallback (非 Reality 流量) → Xray XHTTP (127.0.0.1:2024)
+                      └─ Reality 解密 → 目标由服务端 direct 出站访问
 ```
 
 **特点：**
 
-- 使用 Reality 协议伪装成正常 HTTPS 流量
+- 使用 Reality 协议伪装，不经过 Let's Encrypt
 - XTLS Vision 减少加解密开销
 - Nginx Stream 通过 SNI 分流，使用 Proxy Protocol 传递真实 IP
 - Reality 入站配置了 fallback 到 XHTTP 入站（端口 2024）
 
-#### 2. XHTTP 路径入口（TCP）
+#### 2. XHTTP 路径入口（proxy-cursor，常用于 WARP 拨号）
 
-**方式 A：通过 Nginx HTTPS 转发（推荐）**
+**方式 A：经 Nginx HTTPS（推荐，走 8443 + Let's Encrypt）**
 
 ```
-[客户端] → blog.<root_domain>:443/tcp
+[客户端] → 出站 proxy-cursor (XHTTP + TLS)
   │
-  └─ Nginx Stream
+  └─ 连接 blog.<root_domain>:443，SNI = blog.<root_domain>
       │
-      └─ SNI: blog.<root_domain> → Nginx HTTPS (127.0.0.1:8443)
+      └─ Nginx Stream → Nginx HTTPS (127.0.0.1:8443)
           │
-          └─ location /<xhttp_path>
+          └─ location /<xhttp_path> → proxy_pass → Xray XHTTP (127.0.0.1:2024)
               │
-              └─ proxy_pass → Xray XHTTP (127.0.0.1:2024)
-                  │
-                  └─ 处理 VLESS 代理流量 → 目标服务器
+              └─ 处理 VLESS 代理流量 → 服务端出站（如 wireguard/WARP）
 ```
 
-**方式 B：通过 Reality fallback**
+**要点**：客户端里使用 XHTTP 的出口（如 proxy-cursor）必须设置 **`serverName`: `blog.<root_domain>`**，这样才会进 8443，由 Nginx 用 Let's Encrypt 终结 TLS 再反代到 2024。
+
+**方式 B：经 Reality fallback（SNI = \<root_domain\> 时）**
 
 ```
-[客户端] → <root_domain>:443/tcp
+[客户端] → <root_domain>:443，SNI = <root_domain>
   │
-  └─ Nginx Stream
+  └─ Nginx Stream → Xray Reality (127.0.0.1:1443)
       │
-      └─ SNI: <root_domain> → Xray Reality (127.0.0.1:1443)
-          │
-          └─ Reality 协议不匹配 → fallback → Xray XHTTP (127.0.0.1:2024)
-              │
-              └─ 处理 VLESS 代理流量 → 目标服务器
+      └─ 非 Reality 流量 → fallback → Xray XHTTP (127.0.0.1:2024)
 ```
 
-**特点：**
+若客户端 XHTTP 出口的 serverName 设为 `<root_domain>`，会走此路径；Reality 入站会把“不像 Reality”的流量 fallback 到 2024。若希望 XHTTP 走 8443（证书统一、看起来像正常网站），请用方式 A 并设置 serverName 为 `blog.<root_domain>`。
 
-- 方式 A：通过 `blog.<root_domain>/<xhttp_path>` 访问，看起来像正常的 Web 请求，需要客户端 `proxy-xhttp` 出站的 SNI 设置为 `blog.<root_domain>`
-- 方式 B：通过 Reality 入站的 fallback 机制，当 Reality 协议不匹配时自动 fallback 到 XHTTP 入站
-- 当前客户端配置中 `proxy-xhttp` 出站的 SNI 为 `<root_domain>`，会走方式 B
+#### 3. WARP 链路（Cursor/OpenAI 等）
 
-#### 3. Web 访问（Blog）
+```
+[访问 Cursor/OpenAI 等]
+  │
+  └─ 路由 → outbound warp
+      │
+      └─ warp 的 dialerProxy = proxy-cursor
+          │
+          └─ 先建 proxy-cursor 连接（见上：blog.<root_domain> → 8443 → 2024）
+              │
+              └─ 服务端 Xray 收到后经 wireguard (WARP) 出站访问目标
+```
+
+#### 4. Web 访问（Blog）
 
 ```
 [浏览器] → blog.<root_domain>:443/tcp
@@ -305,10 +313,17 @@ brew services list
       └─ location / → Blog (127.0.0.1:3001)
 ```
 
-**特点：**
+**特点：** 正常 Web 访问，不经过代理；使用 Let's Encrypt 证书提供 HTTPS。
 
-- 正常的 Web 访问，不经过代理
-- 使用 Let's Encrypt 证书提供 HTTPS
+### Let's Encrypt 在链路中的位置
+
+| 组件 | 作用 |
+|------|------|
+| **Nginx stream (443)** | 按 SNI 分流：`blog.<root_domain>` → 8443，其它 → 1443。 |
+| **Nginx http (8443)** | 仅处理 **blog.<root_domain>**：用 **Let's Encrypt** 终结 TLS；`/` 给博客(3001)，`/<xhttp_path>` 反代到 Xray 2024。 |
+| **Let's Encrypt** | 只为 8443 的 HTTPS 提供证书，即只服务「先到 8443」的流量（博客 + XHTTP 入口）。 |
+| **Xray 1443** | Reality 入站，不涉及 LE。 |
+| **Xray 2024** | XHTTP 入站，仅由 Nginx 从 8443 反代而来时才会被用到。 |
 
 ### 端口映射
 
@@ -324,13 +339,14 @@ brew services list
 
 ### 路由规则（客户端）
 
-客户端路由按以下顺序匹配：
+客户端路由按以下顺序匹配（以当前配置为例）：
 
-1. **BitTorrent** → `direct`（直连）
-2. **私有/中国 IP** → `direct`（直连）
-3. **广告域名** → `block`（拦截）
-4. **特定域名**（如 Instagram、Cursor） → `wireguard`（WARP）
-5. **海外流量** → `proxy`（Reality/TCP，默认）
+1. **特定域名**（如 Cursor、OpenAI、ChatGPT） → `warp`（经 proxy-cursor 上 VPS，再经 WARP 出站）
+2. **中国/私有域名** → `direct`（直连）
+3. **海外流量** → `proxy-vision`（VLESS + Reality + XTLS Vision，默认代理）
+4. **广告域名** → `block`（拦截）
+
+其中 `warp` 的 `dialerProxy` 为 `proxy-cursor`，即先通过 XHTTP + TLS 连接 `blog.<root_domain>`，再经服务端 WARP 访问目标。
 
 ### DNS 解析（客户端）
 
@@ -424,7 +440,6 @@ bash ./pre_handle.sh
 ### DNS 解析问题
 
 1. **检查 DNS 配置**
-
    - 确保客户端配置中的 DNS 设置正确
    - 检查 `geoip.dat` 和 `geosite.dat` 是否最新
 
@@ -438,7 +453,6 @@ bash ./pre_handle.sh
 - [Xray 官方文档](https://xtls.github.io/)
 - [Reality 协议说明](https://github.com/XTLS/REALITY)
 - [v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat) - 路由规则数据库
-- [Nginx SNI 分流配置](https://tabsp.com/posts/nginx-sni-vless-reality-vision-xhttp-hysteria2-web/) - SNI 分流思路参考
 
 ## 📝 注意事项
 

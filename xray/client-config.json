@@ -54,7 +54,57 @@
   ],
   "outbounds": [
     {
-      "tag": "proxy",
+      "tag": "proxy-cursor",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "<this_should_be_replaced_by_root_domain>",
+            "port": 443,
+            "users": [
+              {
+                "id": "<this_should_be_replaced_by_vless_uuid>",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "<this_should_be_replaced_by_root_domain>",
+          "fingerprint": "chrome",
+          "alpn": ["h2"]
+        },
+        "xhttpSettings": {
+          "path": "<this_should_be_replaced_by_xhttp_path>",
+          "mode": "auto"
+        }
+      }
+    },
+    {
+      "tag": "warp",
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "<this_should_be_replaced_by_warp_private_key>",
+        "address": ["172.16.0.2/32", "2606:4700:110:818c::2/128"],
+        "peers": [
+          {
+            "publicKey": "<this_should_be_replaced_by_warp_public_key>",
+            "endpoint": "engage.cloudflareclient.com:2408"
+          }
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "dialerProxy": "proxy-cursor"
+        }
+      }
+    },
+    {
+      "tag": "proxy-vision",
       "protocol": "vless",
       "settings": {
         "vnext": [
@@ -78,60 +128,7 @@
           "fingerprint": "chrome",
           "serverName": "<this_should_be_replaced_by_root_domain>",
           "publicKey": "<this_should_be_replaced_by_reality_pub_key>",
-          "path": "<this_should_be_replaced_by_xhttp_path>",
           "shortId": "e4c59e0a8bc6f50e"
-        },
-        "tlsSettings": {
-          "serverName": "<this_should_be_replaced_by_root_domain>"
-        }
-      }
-    },
-    {
-      "tag": "proxy-xhttp",
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "<this_should_be_replaced_by_root_domain>",
-            "port": 443,
-            "users": [
-              {
-                "id": "<this_should_be_replaced_by_vless_uuid>",
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "xhttp",
-        "security": "tls",
-        "tlsSettings": {
-          "serverName": "<this_should_be_replaced_by_root_domain>",
-          "fingerprint": "chrome",
-          "alpn": ["h3", "h2"]
-        },
-        "xhttpSettings": {
-          "path": "<this_should_be_replaced_by_xhttp_path>",
-          "mode": "auto"
-        }
-      }
-    },
-    {
-      "tag": "wireguard",
-      "protocol": "wireguard",
-      "settings": {
-        "secretKey": "<this_should_be_replaced_by_warp_private_key>",
-        "peers": [
-          {
-            "publicKey": "<this_should_be_replaced_by_warp_public_key>",
-            "endpoint": "engage.cloudflareclient.com:2408"
-          }
-        ]
-      },
-      "streamSettings": {
-        "sockopt": {
-          "dialerProxy": "proxy"
         }
       }
     },
@@ -145,51 +142,32 @@
     }
   ],
   "routing": {
-    "domainStrategy": "IPIfNonMatch",
+    "domainStrategy": "AsIs",
     "rules": [
       {
         "type": "field",
-        "ip": ["geoip:private", "geoip:cn"],
+        "inboundTag": ["socks-in", "http-in"],
         "domain": [
-          "domain:<this_should_be_replaced_by_root_domain>",
-          "geosite:cn",
-          "geosite:apple",
-          "geosite:private",
-          "geosite:icloud",
-          "geosite:apple-cn",
-          "geosite:google-cn",
-          "geosite:tld-cn",
-          "geosite:adobe",
-          "geosite:category-games@cn",
-          "domain:*.microsoft.com"
+          "domain:chatgpt.com",
+          "domain:openai.com",
+          "domain:api.openai.com",
+          "domain:cdn.openai.com",
+          "domain:oaiusercontent.com",
+          "domain:*.cursor.sh"
         ],
+        "outboundTag": "warp"
+      },
+
+      {
+        "type": "field",
+        "domain": ["geosite:cn", "geosite:private"],
         "outboundTag": "direct"
       },
-      {
-        "type": "field",
-        "protocol": ["bittorrent"],
-        "outboundTag": "direct"
-      },
-      {
-        "type": "field",
-        "domain": [
-          "domain:*.cursor.sh",
-          "domain:*.instagram.com",
-          "domain:*.cdninstagram.com",
-          "domain:iplocation.com",
-          "domain:iplocation.net"
-        ],
-        "outboundTag": "wireguard"
-      },
-      {
-        "type": "field",
-        "domain": ["geosite:category-ads-all"],
-        "outboundTag": "block"
-      },
+
       {
         "type": "field",
         "domain": ["geosite:geolocation-!cn"],
-        "outboundTag": "proxy"
+        "outboundTag": "proxy-vision"
       }
     ]
   }
