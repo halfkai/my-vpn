@@ -48,7 +48,7 @@
           "show": false,
           "dest": "8443",
           "xver": 1,
-          "serverNames": ["<this_should_be_replaced_by_root_domain>"],
+          "serverNames": ["xray.<this_should_be_replaced_by_root_domain>"],
           "privateKey": "<this_should_be_replaced_by_reality_pri_key>",
           "shortIds": ["e4c59e0a8bc6f50e", "40985e9a8547c46c"]
         },
