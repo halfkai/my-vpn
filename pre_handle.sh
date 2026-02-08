@@ -103,9 +103,6 @@ replace_in_file "$PWD/nginx/nginx.conf" \
 replace_in_file "$PWD/nginx/nginx.conf" \
     "<${credential_prefix}root_domain>" \
     "$root_domain"
-replace_in_file "$PWD/nginx/conf.d/blog.conf" \
-    "<${credential_prefix}website_domain>" \
-    "${website_domain:-}"
 
 # 替换其他文件
 replace_in_file "$PWD/start.sh" \

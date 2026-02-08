@@ -89,10 +89,6 @@ reverse_replace_in_file "$PWD/nginx/nginx.conf" \
 reverse_replace_in_file "$PWD/nginx/nginx.conf" \
     "${root_domain:-}" \
     "${credential_prefix}root_domain"
-reverse_replace_in_file "$PWD/nginx/conf.d/blog.conf" \
-    "${website_domain:-}" \
-    "${credential_prefix}website_domain"
-
 # 替换其他文件
 reverse_replace_in_file "$PWD/start.sh" \
     "${root_domain:-}" \
