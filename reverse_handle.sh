@@ -39,46 +39,46 @@ reverse_replace_in_file "$PWD/letsencrypt/dns_tokens.ini" \
     "${cloudflare_token:-}" \
     "${credential_prefix}cloudflare_token"
 
-# 替换 xray/config.json
-reverse_replace_in_file "$PWD/xray/config.json" \
+# 替换 xray/server.jsonc
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${vless_uuid:-}" \
     "${credential_prefix}vless_uuid"
-reverse_replace_in_file "$PWD/xray/config.json" \
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${reality_pri_key:-}" \
     "${credential_prefix}reality_pri_key"
-reverse_replace_in_file "$PWD/xray/config.json" \
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${xhttp_path:-}" \
     "${credential_prefix}xhttp_path"
-reverse_replace_in_file "$PWD/xray/config.json" \
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${root_domain:-}" \
     "${credential_prefix}root_domain"
-reverse_replace_in_file "$PWD/xray/config.json" \
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${warp_private_key:-}" \
     "${credential_prefix}warp_private_key"
-reverse_replace_in_file "$PWD/xray/config.json" \
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${warp_public_key:-}" \
     "${credential_prefix}warp_public_key"
-reverse_replace_in_file "$PWD/xray/config.json" \
+reverse_replace_in_file "$PWD/xray/server.jsonc" \
     "${warp_private_key:-}" \
     "${credential_prefix}warp_private_key"
 
-# 替换 xray/client-config.json
-reverse_replace_in_file "$PWD/xray/client-config.json" \
+# 替换 xray/client.jsonc
+reverse_replace_in_file "$PWD/xray/client.jsonc" \
     "${warp_public_key:-}" \
     "${credential_prefix}warp_public_key"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
+reverse_replace_in_file "$PWD/xray/client.jsonc" \
     "${warp_private_key:-}" \
     "${credential_prefix}warp_private_key"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
+reverse_replace_in_file "$PWD/xray/client.jsonc" \
     "${root_domain:-}" \
     "${credential_prefix}root_domain"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
+reverse_replace_in_file "$PWD/xray/client.jsonc" \
     "${vless_uuid:-}" \
     "${credential_prefix}vless_uuid"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
+reverse_replace_in_file "$PWD/xray/client.jsonc" \
     "${reality_pub_key:-}" \
     "${credential_prefix}reality_pub_key"
-reverse_replace_in_file "$PWD/xray/client-config.json" \
+reverse_replace_in_file "$PWD/xray/client.jsonc" \
     "${xhttp_path:-}" \
     "${credential_prefix}xhttp_path"
 

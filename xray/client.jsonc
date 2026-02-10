@@ -80,6 +80,7 @@
             "users": [
               {
                 "id": "<this_should_be_replaced_by_vless_uuid>",
+                "flow": "xtls-rprx-vision",
                 "encryption": "none"
               }
             ]
@@ -114,7 +115,7 @@
       },
       "streamSettings": {
         "sockopt": {
-          "dialerProxy": "proxy-xhttp"
+          "dialerProxy": "proxy-vision"
         }
       }
     },
@@ -131,48 +132,42 @@
     "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
-        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "direct"
+      },
+      {
         "ip": ["geoip:private", "geoip:cn"],
+        "outboundTag": "direct"
+      },
+      {
         "domain": [
-          "domain:xray.<this_should_be_replaced_by_root_domain>",
-          "geosite:cn",
-          "geosite:apple",
+          "full:xray.<this_should_be_replaced_by_root_domain>",
           "geosite:private",
+          "geosite:apple",
           "geosite:icloud",
           "geosite:apple-cn",
           "geosite:google-cn",
           "geosite:tld-cn",
           "geosite:adobe",
           "geosite:category-games@cn",
-          "domain:*.microsoft.com"
+          "domain:microsoft.com"
         ],
-        "protocol": ["bittorrent"],
         "outboundTag": "direct"
       },
       {
-        "type": "field",
         "domain": [
           "domain:chatgpt.com",
           "domain:openai.com",
-          "domain:api.openai.com",
-          "domain:cdn.openai.com",
           "domain:oaiusercontent.com",
-          "domain:api2.cursor.sh",
-          "domain:api3.cursor.sh",
-          "domain:api2.cursor.com",
-          "domain:api3.cursor.com",
-          "domain:alive.github.com",
-          "domain:*.instagram.com",
-          "domain:*.cdninstagram.com",
+          "domain:cursor.sh",
+          "domain:cursor.com",
+          "domain:instagram.com",
+          "domain:cdninstagram.com",
           "domain:iplocation.com",
-          "domain:iplocation.net"
+          "domain:iplocation.net",
+          "full:alive.github.com"
         ],
-        "outboundTag": "proxy-vision"
-      },
-      {
-        "type": "field",
-        "domain": ["geosite:geolocation-!cn"],
-        "outboundTag": "proxy-vision"
+        "outboundTag": "warp"
       }
     ]
   }

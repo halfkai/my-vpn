@@ -13,7 +13,7 @@ nginx -t
 
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
-cp ./xray/config.json /usr/local/etc/xray/config.json
+cp ./xray/server.jsonc /usr/local/etc/xray/server.jsonc
 
 systemctl restart nginx
 systemctl restart xray

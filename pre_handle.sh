@@ -53,46 +53,46 @@ replace_in_file "$PWD/letsencrypt/dns_tokens.ini" \
     "<${credential_prefix}cloudflare_token>" \
     "${cloudflare_token:-}"
 
-# 替换 xray/config.json
-replace_in_file "$PWD/xray/config.json" \
+# 替换 xray/server.jsonc
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}vless_uuid>" \
     "$vless_uuid"
-replace_in_file "$PWD/xray/config.json" \
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}reality_pri_key>" \
     "$reality_pri_key"
-replace_in_file "$PWD/xray/config.json" \
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}xhttp_path>" \
     "$xhttp_path"
-replace_in_file "$PWD/xray/config.json" \
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}root_domain>" \
     "$root_domain"
-replace_in_file "$PWD/xray/config.json" \
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}warp_private_key>" \
     "${warp_private_key:-}"
-replace_in_file "$PWD/xray/config.json" \
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}warp_public_key>" \
     "${warp_public_key:-}"
-replace_in_file "$PWD/xray/config.json" \
+replace_in_file "$PWD/xray/server.jsonc" \
     "<${credential_prefix}warp_private_key>" \
     "${warp_private_key:-}"
 
-# 替换 xray/client-config.json
-replace_in_file "$PWD/xray/client-config.json" \
+# 替换 xray/client.jsonc
+replace_in_file "$PWD/xray/client.jsonc" \
     "<${credential_prefix}warp_public_key>" \
     "${warp_public_key:-}"
-replace_in_file "$PWD/xray/client-config.json" \
+replace_in_file "$PWD/xray/client.jsonc" \
     "<${credential_prefix}warp_private_key>" \
     "${warp_private_key:-}"
-replace_in_file "$PWD/xray/client-config.json" \
+replace_in_file "$PWD/xray/client.jsonc" \
     "<${credential_prefix}root_domain>" \
     "$root_domain"
-replace_in_file "$PWD/xray/client-config.json" \
+replace_in_file "$PWD/xray/client.jsonc" \
     "<${credential_prefix}vless_uuid>" \
     "$vless_uuid"
-replace_in_file "$PWD/xray/client-config.json" \
+replace_in_file "$PWD/xray/client.jsonc" \
     "<${credential_prefix}reality_pub_key>" \
     "$reality_pub_key"
-replace_in_file "$PWD/xray/client-config.json" \
+replace_in_file "$PWD/xray/client.jsonc" \
     "<${credential_prefix}xhttp_path>" \
     "$xhttp_path"
 

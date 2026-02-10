@@ -4,23 +4,6 @@
     "access": "/var/log/xray/access.log",
     "error": "/var/log/xray/error.log"
   },
-  "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "type": "field",
-        "ip": ["geoip:private", "geoip:cn"],
-        "protocol": ["bittorrent"],
-        "outboundTag": "block"
-      },
-      {
-        "type": "field",
-        "ip": ["geoip:!cn"],
-        "domain": ["geosite:geolocation-!cn"],
-        "outboundTag": "direct"
-      }
-    ]
-  },
   "inbounds": [
     {
       "tag": "proxy-vision",
@@ -37,7 +20,8 @@
         "decryption": "none",
         "fallbacks": [
           {
-            "dest": 2024
+            "dest": 2024,
+            "xver": 1
           }
         ]
       },
@@ -88,6 +72,7 @@
     }
   ],
   "outbounds": [
+    // the first outbound is used when no matched routing rules
     {
       "tag": "direct",
       "protocol": "freedom"
@@ -113,5 +98,29 @@
       "tag": "block",
       "protocol": "blackhole"
     }
-  ]
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      // When multiple attributes are specified simultaneously,
+      // these attributes must be satisfied simultaneously for the current rule to take effect.
+      {
+        "ip": ["geoip:private", "geoip:cn"],
+        "outboundTag": "block"
+      },
+      {
+        "protocol": ["bittorrent"],
+        "outboundTag": "block"
+      },
+      {
+        "domain": [
+          "domain:chatgpt.com",
+          "domain:openai.com",
+          "domain:cursor.sh",
+          "domain:cursor.com"
+        ],
+        "outboundTag": "warp"
+      }
+    ]
+  }
 }
