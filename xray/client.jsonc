@@ -24,9 +24,7 @@
       "protocol": "socks",
       "listen": "127.0.0.1",
       "port": 10800,
-      "settings": {
-        "udp": true
-      }
+      "udp": true
     },
     {
       "tag": "http-in",
@@ -153,21 +151,6 @@
           "domain:microsoft.com"
         ],
         "outboundTag": "direct"
-      },
-      {
-        "domain": [
-          "domain:chatgpt.com",
-          "domain:openai.com",
-          "domain:oaiusercontent.com",
-          "domain:cursor.sh",
-          "domain:cursor.com",
-          "domain:instagram.com",
-          "domain:cdninstagram.com",
-          "domain:iplocation.com",
-          "domain:iplocation.net",
-          "full:alive.github.com"
-        ],
-        "outboundTag": "warp"
       }
     ]
   }
