@@ -111,15 +111,6 @@
       {
         "protocol": ["bittorrent"],
         "outboundTag": "block"
-      },
-      {
-        "domain": [
-          "domain:chatgpt.com",
-          "domain:openai.com",
-          "domain:cursor.sh",
-          "domain:cursor.com"
-        ],
-        "outboundTag": "warp"
       }
     ]
   }
