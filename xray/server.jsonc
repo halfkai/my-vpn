@@ -62,7 +62,7 @@
         "network": "xhttp",
         "xhttpSettings": {
           "path": "<this_should_be_replaced_by_xhttp_path>",
-          "mode": "auto"
+          "mode": "stream-one"
         }
       },
       "sniffing": {
