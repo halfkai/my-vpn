@@ -59,7 +59,6 @@
           "fingerprint": "chrome",
           "serverName": "xray.<this_should_be_replaced_by_root_domain>",
           "publicKey": "<this_should_be_replaced_by_reality_pub_key>",
-          "path": "<this_should_be_replaced_by_xhttp_path>",
           "shortId": "e4c59e0a8bc6f50e"
         }
       },
@@ -89,8 +88,8 @@
         "network": "xhttp",
         "security": "tls",
         "tlsSettings": {
-          "serverName": "xray.<this_should_be_replaced_by_root_domain>",
-          "alpn": ["h3", "h2", "http/1.1"]
+          "serverName": "<this_should_be_replaced_by_root_domain>",
+          "alpn": ["h3", "h2"]
         },
         "xhttpSettings": {
           "path": "<this_should_be_replaced_by_xhttp_path>",
@@ -147,8 +146,7 @@
           "geosite:google-cn",
           "geosite:tld-cn",
           "geosite:adobe",
-          "geosite:category-games@cn",
-          "domain:microsoft.com"
+          "geosite:category-games@cn"
         ],
         "outboundTag": "direct"
       }

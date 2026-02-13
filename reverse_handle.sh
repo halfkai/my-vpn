@@ -89,6 +89,12 @@ reverse_replace_in_file "$PWD/nginx/nginx.conf" \
 reverse_replace_in_file "$PWD/nginx/nginx.conf" \
     "${root_domain:-}" \
     "${credential_prefix}root_domain"
+
+# 替换 nginx/conf.d/h2_only.conf
+reverse_replace_in_file "$PWD/nginx/conf.d/h2_only.conf" \
+    "${root_domain:-}" \
+    "${credential_prefix}root_domain"
+
 # 替换其他文件
 reverse_replace_in_file "$PWD/start.sh" \
     "${root_domain:-}" \
