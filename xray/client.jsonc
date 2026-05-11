@@ -4,20 +4,6 @@
     "error": "/opt/homebrew/var/log/xray/error.log",
     "loglevel": "error"
   },
-  "dns": {
-    "servers": [
-      {
-        "address": "https+local://1.1.1.1/dns-query",
-        "domains": ["geosite:geolocation-!cn"]
-      },
-      {
-        "address": "https+local://[2606:4700:4700::1111]/dns-query",
-        "domains": ["geosite:geolocation-!cn"]
-      },
-      "localhost"
-    ],
-    "queryStrategy": "UseIP"
-  },
   "inbounds": [
     {
       "tag": "socks-in",
